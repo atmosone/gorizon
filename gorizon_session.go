@@ -63,16 +63,16 @@ func (s *Session) read() {
 	defer s.Close()
 
 	for {
-		message := &Message{}
-		if err := s.conn.ReadJSON(message); err != nil {
-			fmt.Printf("Read error: %v\n", err)
-			return
-		}
-
 		select {
 		case <-s.ctx.Done():
 			return
-		case s.input <- message:
+		default:
+			message := &Message{}
+			if err := s.conn.ReadJSON(message); err != nil {
+				fmt.Printf("Read error: %v\n", err)
+				return
+			}
+			s.input <- message
 		}
 	}
 }

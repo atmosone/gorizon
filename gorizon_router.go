@@ -2,6 +2,7 @@ package gorizon
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -41,11 +42,8 @@ loop:
 		case <-session.Context().Done():
 			r.hub.Disconnect(session)
 			break loop
-		case message, ok := <-session.Read():
-			if !ok {
-				r.hub.Disconnect(session)
-				break loop
-			}
+		case message := <-session.Read():
+			fmt.Println(message)
 			if h, ok := r.routes[message.Topic]; ok {
 				h(session, message)
 			}
@@ -54,7 +52,7 @@ loop:
 	}
 }
 
-func (r *router) HandlerFunc(topic string, h HandlerFunc) {
+func (r *router) OnMessage(topic string, h HandlerFunc) {
 	r.routes[topic] = h
 }
 

@@ -10,10 +10,13 @@ import (
 )
 
 func main() {
+	store := gorizon.NewStore()
+	hub := gorizon.NewHub(store)
+	go hub.Open()
 
-	g := gorizon.NewRouter(gorizon.NewHub(gorizon.NewStore()))
+	router := gorizon.NewRouter(hub)
 
-	g.HandlerFunc("hello", func(s *gorizon.Session, m *gorizon.Message) {
+	router.OnMessage("hello", func(s *gorizon.Session, m *gorizon.Message) {
 		var data string
 		if err := json.NewDecoder(bytes.NewBuffer(m.Payload)).Decode(&data); err != nil {
 			fmt.Println(err)
@@ -22,9 +25,13 @@ func main() {
 		s.Write(m)
 	})
 
-	g.HandlerFunc("broadcast", func(s *gorizon.Session, m *gorizon.Message) {
-		g.Broadcast(m)
+	router.OnMessage("broadcast", func(s *gorizon.Session, m *gorizon.Message) {
+		router.Broadcast(m)
 	})
 
-	http.ListenAndServe(":8080", g)
+	mux := http.NewServeMux()
+
+	mux.Handle("/ws", router)
+
+	http.ListenAndServe(":8080", mux)
 }
