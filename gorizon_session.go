@@ -25,8 +25,6 @@ func (s *Session) Close() error {
 	err := s.conn.Close()
 	time.Sleep(100 * time.Millisecond)
 
-	close(s.input)
-	close(s.output)
 	return err
 }
 
